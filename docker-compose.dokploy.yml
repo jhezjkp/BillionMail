@@ -51,7 +51,7 @@ services:
         - billionmail-network
 
     dovecot-billionmail:
-      image: billionmail/dovecot:1.5
+      image: billionmail/dovecot:1.6
       hostname: dovecot
       depends_on:
         - pgsql-billionmail
@@ -124,7 +124,7 @@ services:
         - billionmail-network
 
     webmail-billionmail:
-      image: roundcube/roundcubemail:1.6.10-fpm-alpine
+      image: roundcube/roundcubemail:1.6.11-fpm-alpine
       hostname: roundcube
       depends_on:
         - pgsql-billionmail
@@ -152,7 +152,7 @@ services:
         - billionmail-network
 
     core-billionmail:
-      image: billionmail/core:4.4.2
+      image: billionmail/core:4.9.0
       hostname: core-manage
       depends_on:
         - pgsql-billionmail

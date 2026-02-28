@@ -92,16 +92,6 @@ const rules: FormRules = {
 		message: t('smtp.form.validation.nameRequired'),
 		trigger: ['blur', 'input'],
 	},
-	sender_domains: {
-		required: true,
-		trigger: ['change'],
-		validator: (rule, value) => {
-			if (!value || value.length === 0) {
-				return new Error(t('smtp.form.validation.domainRequired'))
-			}
-			return true
-		},
-	},
 	relay_host: {
 		required: true,
 		message: t('smtp.form.validation.serverRequired'),
@@ -116,16 +106,6 @@ const rules: FormRules = {
 			}
 			return true
 		},
-	},
-	auth_user: {
-		required: true,
-		message: t('smtp.form.validation.usernameRequired'),
-		trigger: ['blur', 'input'],
-	},
-	auth_password: {
-		required: true,
-		message: t('smtp.form.validation.passwordRequired'),
-		trigger: ['blur', 'input'],
 	},
 }
 

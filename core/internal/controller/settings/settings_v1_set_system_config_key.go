@@ -3,14 +3,16 @@ package settings
 import (
 	"billionmail-core/internal/consts"
 	"context"
-	"github.com/gogf/gf/os/gtimer"
 	"time"
+
+	"github.com/gogf/gf/os/gtimer"
 
 	"billionmail-core/api/settings/v1"
 	"billionmail-core/internal/service/public"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
-	"strings"
 )
 
 func (c *ControllerV1) SetSystemConfigKey(ctx context.Context, req *v1.SetSystemConfigKeyReq) (res *v1.SetSystemConfigKeyRes, err error) {
@@ -57,7 +59,7 @@ func (c *ControllerV1) SetSystemConfigKey(ctx context.Context, req *v1.SetSystem
 
 	// 4. Restart the container
 	gtimer.AddOnce(500*time.Millisecond, func() {
-		err = public.DockerApiFromCtx(ctx).RestartContainerByName(ctx, consts.SERVICES.Core)
+		err = public.DockerApiFromCtx(ctx).RestartContainerByName(context.Background(), consts.SERVICES.Core)
 		if err != nil {
 			g.Log().Error(ctx, "Failed to restart container: {}", err)
 			return
@@ -101,6 +103,7 @@ func convertJsonKeyToEnvKey(jsonKey string, value string, envMap map[string]stri
 		"ipv4_network":         "IPV4_NETWORK",
 		"fail2ban":             "FAIL2BAN_INIT",
 		"ip_whitelist_enable":  "IP_WHITELIST_ENABLE",
+		"retention_days":       "RETENTION_DAYS",
 	}
 
 	// Get the environment variable key name

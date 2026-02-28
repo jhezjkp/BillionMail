@@ -5,6 +5,7 @@ import (
 	"billionmail-core/internal/service/batch_mail"
 	"billionmail-core/internal/service/public"
 	"context"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 
@@ -49,9 +50,6 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 	if req.Warmup == 0 || req.Warmup == 1 {
 		updateData["warmup"] = req.Warmup
 	}
-	if req.UseTagFilter == 0 || req.UseTagFilter == 1 {
-		updateData["use_tag_filter"] = req.UseTagFilter
-	}
 
 	if req.Addresser != "" {
 		updateData["addresser"] = req.Addresser
@@ -79,7 +77,7 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 	if len(req.TagIds) > 0 {
 		updateData["tag_ids"] = req.TagIds
 	}
-	if req.TagLogic == "AND" || req.TagLogic == "OR" {
+	if req.TagLogic == "AND" || req.TagLogic == "OR" || req.TagLogic == "NOT" {
 		updateData["tag_logic"] = req.TagLogic
 	}
 	if len(updateData) == 0 {

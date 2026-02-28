@@ -7,7 +7,7 @@
 
 [![][license-shield]][license-link] [![][docs-shield]][docs-link] [![][github-release-shield]][github-release-link] [![][github-stars-shield]][github-stars-link]
 
-English | [简体中文](README-zh_CN.md) | [日本語](README-ja.md)
+English | [简体中文](README-zh_CN.md) | [日本語](README-ja.md) | [Türkçe](README-ja.md)
 </div>
 <br/>
 
@@ -170,3 +170,4 @@ See the [LICENSE](LICENSE) file for more details.
 [github-release-shield]: https://img.shields.io/github/v/release/aaPanel/BillionMail
 [github-stars-shield]: https://img.shields.io/github/stars/aaPanel/BillionMail?color=%231890FF&style=flat-square   
 [license-shield]: https://img.shields.io/github/license/aaPanel/BillionMail
+

@@ -17,6 +17,10 @@
 			<IpWhitelistSettings />
 			<n-divider />
 			<ProxySettings />
+			<n-divider />
+			<ApiSettings />
+			<n-divider />
+			<RetentionTime />
 		</div>
 	</n-card>
 </template>
@@ -26,4 +30,6 @@ import PortSettings from './PortSettings.vue'
 import TimezoneSettings from './TimezoneSettings.vue'
 import IpWhitelistSettings from './IpWhitelistSettings.vue'
 import ProxySettings from './ProxySettings.vue'
+import ApiSettings from './ApiSettings.vue'
+import RetentionTime from './System/RetentionTime.vue'
 </script>

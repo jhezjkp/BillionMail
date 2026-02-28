@@ -2,6 +2,7 @@ package v1
 
 import (
 	"billionmail-core/utility/types/api_v1"
+
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -120,9 +121,6 @@ type ExportContactsReq struct {
 
 type ExportContactsRes struct {
 	api_v1.StandardRes
-	Data struct {
-		FileUrl string `json:"file_url" dc:"Download URL"`
-	} `json:"data"`
 }
 
 type DeleteGroupReq struct {
@@ -298,7 +296,7 @@ type GetContactsTrendRes struct {
 }
 
 type MonthlyCount struct {
-	Date string `json:"date" dc:"Month Format: YYYY-MM"`
+	Date  string `json:"date" dc:"Month Format: YYYY-MM"`
 	Count int    `json:"count" dc:"Count"`
 }
 
@@ -317,6 +315,21 @@ type GetGroupContactCountRes struct {
 	api_v1.StandardRes
 	Data struct {
 		Total int `json:"total" dc:"Total contact count"`
+	} `json:"data" dc:"Data"`
+}
+
+type GetSingleGroupTagContactCountReq struct {
+	g.Meta        `path:"/contact/group/tag_contact_count" method:"post" tags:"Contact" summary:"Get single group contact count with tag ids"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	GroupId       int    `json:"group_id" v:"required" dc:"Group ID"`
+	TagIds        []int  `json:"tag_ids"  dc:"Tag IDs"`
+	TagLogic      string `json:"tag_logic" v:"required|in:AND,OR,NOT" dc:"Tag Logic (AND/OR/NOT)"`
+}
+
+type GetSingleGroupTagContactCountRes struct {
+	api_v1.StandardRes
+	Data struct {
+		Total int `json:"total" dc:"Total contact count with given tag ids in the group"`
 	} `json:"data" dc:"Data"`
 }
 

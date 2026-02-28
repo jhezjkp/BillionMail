@@ -5,8 +5,9 @@ import (
 	"billionmail-core/internal/service/maillog_stat"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/frame/g"
 	"time"
+
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func GetListWithPage(ctx context.Context, page, pageSize int, keyword string, addType int) (total int, list []*entity.AbnormalRecipient, err error) {
@@ -140,6 +141,76 @@ func BatchUpsertAbnormalRecipients(ctx context.Context, recipients []string, add
 	return nil
 }
 
+// BatchUpsertAbnormalRecipientsWithDetails
+func BatchUpsertAbnormalRecipientsWithDetails(ctx context.Context, recipientDetails []RecipientDetail, addType int, baseDescription string) error {
+	now := time.Now().Unix()
+
+	if len(recipientDetails) == 0 {
+		return nil
+	}
+
+	recipients := make([]string, len(recipientDetails))
+	detailsMap := make(map[string]RecipientDetail)
+	for i, detail := range recipientDetails {
+		recipients[i] = detail.Email
+		detailsMap[detail.Email] = detail
+	}
+
+	var existList []entity.AbnormalRecipient
+	err := g.DB().Model("abnormal_recipient").WhereIn("recipient", recipients).Scan(&existList)
+	if err != nil {
+		return fmt.Errorf("Failed to query existing abnormal recipients: %w", err)
+	}
+	existMap := make(map[string]*entity.AbnormalRecipient)
+	for _, r := range existList {
+		existMap[r.Recipient] = &r
+	}
+
+	// 1. Update the existing records
+	for _, r := range existList {
+		detail := detailsMap[r.Recipient]
+		description := fmt.Sprintf("%s - %s", baseDescription, detail.ErrorReason)
+
+		_, err := g.DB().Model("abnormal_recipient").Where("id", r.Id).Data(g.Map{
+			"count":       r.Count + 1,
+			"description": description,
+			"add_type":    addType,
+		}).Update()
+		if err != nil {
+			return fmt.Errorf("Failed to update abnormal recipient: %w", err)
+		}
+	}
+
+	// 2. Inserting a non-existent record
+	var insertList []g.Map
+	for _, detail := range recipientDetails {
+		if _, ok := existMap[detail.Email]; !ok {
+			description := fmt.Sprintf("%s - %s", baseDescription, detail.ErrorReason)
+			insertList = append(insertList, g.Map{
+				"recipient":   detail.Email,
+				"count":       1,
+				"add_type":    addType,
+				"description": description,
+				"create_time": now,
+			})
+		}
+	}
+
+	if len(insertList) > 0 {
+		_, err := g.DB().Model("abnormal_recipient").Data(insertList).InsertIgnore()
+		if err != nil {
+			return fmt.Errorf("Failed to insert abnormal recipients: %w", err)
+		}
+	}
+
+	return nil
+}
+
+type RecipientDetail struct {
+	Email       string `json:"email"`
+	ErrorReason string `json:"error_reason"`
+}
+
 func AbnormalRecipientAutoStat(ctx context.Context) {
 
 	var abnormalSwitch string
@@ -157,21 +228,41 @@ func AbnormalRecipientAutoStat(ctx context.Context) {
 	now := time.Now().Unix()
 
 	overview := maillog_stat.NewOverview()
-	failedList := overview.FailedList(0, "", lastTime, now)
+	failedList := overview.FailedListBounced(0, "", lastTime, now)
 
-	recipientSet := make(map[string]struct{})
+
+	recipientDetailsMap := make(map[string]*RecipientDetail)
 	for _, item := range failedList {
-		if recipient, ok := item["recipient"].(string); ok && recipient != "" {
-			recipientSet[recipient] = struct{}{}
+		recipient, recipientOk := item["recipient"].(string)
+		if !recipientOk || recipient == "" {
+			continue
+		}
+
+
+		description, descOk := item["description"].(string)
+		if !descOk {
+			description = "Unknown error"
+		}
+
+
+		if _, exists := recipientDetailsMap[recipient]; !exists {
+			recipientDetailsMap[recipient] = &RecipientDetail{
+				Email:       recipient,
+				ErrorReason: description,
+			}
+		} else {
+			recipientDetailsMap[recipient].ErrorReason = description
 		}
 	}
-	var recipients []string
-	for r := range recipientSet {
-		recipients = append(recipients, r)
+
+	var recipientDetails []RecipientDetail
+	for _, detail := range recipientDetailsMap {
+		recipientDetails = append(recipientDetails, *detail)
 	}
 
-	if len(recipients) > 0 {
-		_ = BatchUpsertAbnormalRecipients(ctx, recipients, 2, "Automatic statistics")
+	if len(recipientDetails) > 0 {
+
+		_ = BatchUpsertAbnormalRecipientsWithDetails(ctx, recipientDetails, 2, "Automatic statistics")
 	}
 
 	setLastStatTime(ctx, now)

@@ -282,7 +282,8 @@
 				"auto": "自動"
 			},
 			"edit": {
-				"addTitle": "タスク追加",
+				"addTitle": "タスクを追加",
+				"editTitle": "タスクを編集",
 				"from": "送信元",
 				"to": "宛先",
 				"displayName": "表示名",
@@ -307,6 +308,12 @@
 				"testEmailPlaceholder": "テストメールを入力してください",
 				"sendTest": "テストメール送信",
 				"viewCase": "ケースを見る",
+				"tags": "タグ",
+				"tagLogic": "タグロジック",
+				"ipWarmup": "IPウォームアップシステムを関連付け",
+				"ipWarmupTip": "有効にすると送信速度が制限されます",
+				"trackClick": "クリック追跡",
+				"trackOpen": "開封追跡",
 				"preview": {
 					"empty": "プレビューするメールテンプレートを選択してください"
 				},
@@ -437,55 +444,116 @@
 	},
 	"contacts": {
 		"subscribers": {
+			"joinGroup": "グループに参加",
+			"tags": "タグ",
+			"selectGroupHint": "右側でグループを選択してください",
+			"trends": {
+				"title": "購読トレンド",
+				"subscriber": "購読者"
+			},
 			"search": {
 				"emailPlaceholder": "メールアドレスを入力して検索"
 			},
 			"columns": {
 				"email": "メール",
 				"name": "グループ名",
-				"createdAt": "作成日時"
+				"createdAt": "作成時間",
+				"lastActiveAt": "最終アクティブ時間"
 			},
 			"status": {
-				"subscribed": "購読中",
-				"unsubscribed": "購読解除"
+				"subscribed": "購読済み",
+				"unsubscribed": "購読解除",
+				"unconfirmed": "未確認"
+			},
+			"labels": {
+				"status": "ステータス：",
+				"tags": "タグ：",
+				"active": "アクティブ："
+			},
+			"activeSelect": {
+				"options": {
+					"all": "すべて",
+					"yes": "はい",
+					"no": "いいえ"
+				},
+				"timeOptions": {
+					"past7Days": "過去7日間",
+					"pastMonth": "過去1ヶ月",
+					"past90Days": "過去90日間",
+					"pastHalfYear": "過去6ヶ月",
+					"pastYear": "過去1年"
+				}
 			},
 			"actions": {
-				"changeGroup": "グループ変更"
+				"changeGroup": "グループ変更",
+				"setTag": "タグ設定"
 			},
 			"delete": {
-				"title": "購読者削除",
+				"title": "購読者を削除",
 				"confirm": "購読者 {email} を削除してもよろしいですか？"
 			},
+			"batchDelete": {
+				"title": "一括削除",
+				"confirm": "選択した購読者を削除してもよろしいですか？"
+			},
 			"select": {
-				"prefix": "グループ: "
+				"prefix": "グループ："
 			},
 			"edit": {
 				"title": "グループ変更",
 				"email": "メール",
 				"group": "グループ",
+				"status": "ステータス",
+				"attributes": "属性",
+				"statusOptions": {
+					"subscribe": "購読",
+					"unsubscribe": "購読解除"
+				},
 				"validation": {
 					"emailRequired": "メールを入力してください",
 					"groupRequired": "グループを選択してください"
 				}
 			},
 			"import": {
-				"title": "連絡先インポート",
+				"title": "連絡先をインポート",
 				"group": "グループ",
 				"data": "データ",
 				"pasteData": "データを貼り付け",
 				"uploadFile": "ファイルをアップロード",
-				"pastePlaceholder": "1行につき1メールでデータを貼り付けてください",
-				"fileTypeHint": "ファイル形式: txt、1行につき1メール、5MB以内",
+				"pastePlaceholder": [
+					"データを貼り付けてください。1行に1つのメールアドレス、属性（オプション）",
+					"例：example1@example.com",
+					"example1@example.com,\"{\"\"age\"\": \"\"13\"\", \"\"Gender\"\": \"\"XXX\"\"}\""
+				],
+				"fileTypeHint": "ファイルタイプ：csv、5MB以下",
+				"overwriteLabel": "既存ユーザーを上書き",
+				"overwriteDescription": "インポート時にインポートデータに従ってリスト内の既存の顧客情報を上書きするかどうか",
+				"subscriptionStatus": "購読状況",
 				"validation": {
 					"groupRequired": "グループを選択してください",
 					"dataRequired": "1行につき1メールでデータを貼り付けてください",
 					"fileRequired": "ファイルをアップロードしてください"
 				}
 			},
+			"batchSetTag": {
+				"title": "バッチタグ設定",
+				"labels": {
+					"tag": "タグ",
+					"action": "アクション"
+				},
+				"actions": {
+					"add": "追加",
+					"remove": "削除"
+				}
+			},
+			"tagSelect": {
+				"manageTags": "タグを管理"
+			},
 			"loading": {
 				"importSubscribers": "連絡先をインポート中... お待ちください",
 				"updateSubscriberGroup": "グループを更新中... お待ちください",
-				"deleteSubscriber": "連絡先を削除中... お待ちください"
+				"deleteSubscriber": "連絡先を削除中... お待ちください",
+				"batchSetTag": "処理中... お待ちください"
 			}
 		},
 		"group": {
@@ -514,13 +582,68 @@
 				"confirm": "グループ {name} を削除してもよろしいですか？"
 			},
 			"fileUpload": {
-				"hint": "ファイル形式: txt、1行につき1メール、5MB以内",
+				"hint": "ファイル形式: txt、1行につき1メール、10MB以内",
 				"emptyHint": "ファイルをアップロードしない場合は空のグループが作成されます"
 			},
 			"loading": {
 				"createGroup": "グループ作成中... お待ちください",
 				"updateGroup": "グループ更新中... お待ちください",
 				"deleteGroup": "グループ削除中... お待ちください"
+			}
+		},
+		"settings": {
+			"title": "設定",
+			"tabs": {
+				"subscribeForm": "購読フォーム",
+				"subscribeSettings": "購読設定",
+				"unsubscribeSettings": "購読解除設定"
+			},
+			"subscribeForm": {
+				"separateSubscriptionPage": {
+					"title": "Separate Subscription Page",
+					"description": "Simply copy and share this URL with users – the subscription form is ready to use."
+				},
+				"embeddableForm": {
+					"title": "Embeddable Form",
+					"description": "Easily embed this subscription form into your website pages."
+				}
+			},
+			"subscribeSettings": {
+				"listType": {
+					"label": "List Type",
+					"placeholder": "Please select list type",
+					"options": {
+						"doubleOptin": "Double Opt-in",
+						"singleOptin": "Single Opt-in"
+					}
+				},
+				"confirmEmail": {
+					"subject": "Confirmation Email Subject",
+					"redirectLink": "Confirmation Redirect Link",
+					"redirectDescription": "Enter the custom link below to redirect users to a confirmation page for their 'Double Opt-in' subscription",
+					"emailContent": "Confirmation Email",
+					"emailTip1": "If you customize the confirmation email, don't forget to include the confirmation link",
+					"emailTip2": "somewhere in your message"
+				},
+				"welcomeEmail": {
+					"subject": "Welcome Email Subject",
+					"redirectLink": "Welcome Redirect Link",
+					"redirectDescription": "Please enter the link below to direct users to a custom confirmation page after they subscribe successfully",
+					"emailContent": "Welcome Email",
+					"sendThroughTip": "Messages are sent through the",
+					"mailboxTip": "mailbox of the default sending domain",
+					"enabledDescription": "When enabled, a thank you email will be sent to the user when they subscribe via the subscription form or API. This will not be triggered for manually added users.",
+					"templateVariablesTip": "You can use the information you collect in the subject and message of your thank you email, which is the Template Variables."
+				},
+				"alreadySubscribed": {
+					"redirectLink": "Already Subscribed Redirect Link"
+				},
+				"unsubscribeSettings": {
+					"subject": "購読解除件名",
+					"redirectLink": "購読解除リダイレクトリンク",
+					"emailPage": "購読解除メールページ",
+					"enabledDescription": "有効にすると、ユーザーが購読解除またはAPI購読解除を行った際に、購読解除メールが送信されます。手動で追加されたユーザーはこの機能をトリガーしません。"
+				}
 			}
 		},
 		"suspend": {
@@ -579,8 +702,59 @@
 					"setting": "設定中です。しばらくお待ちください..."
 				}
 			}
+		},
+		"tags": {
+			"title": "タグ管理",
+			"addTag": "タグを追加",
+			"bulkTag": "一括タグ",
+			"searchPlaceholder": "タグを検索",
+			"columns": {
+				"name": "タグ名",
+				"groupName": "グループ名",
+				"createTime": "作成時間",
+				"actions": "操作"
+			},
+			"delete": {
+				"title": "タグを削除",
+				"confirm": "このタグ【{name}】を削除してもよろしいですか？"
+			},
+			"bulk": {
+				"title": "連絡先の一括タグ付け",
+				"form": {
+					"group": "グループ",
+					"tags": "タグ",
+					"emails": "メール",
+					"action": "アクション",
+					"emailsPlaceholder": "メールアドレスを貼り付けてください、1行に1つ"
+				},
+				"actions": {
+					"tagThese": "これらのメールにタグを付ける",
+					"tagExcept": "これらのメール以外の全員にタグを付ける"
+				}
+			},
+			"form": {
+				"title": {
+					"create": "タグを作成",
+					"edit": "タグを編集"
+				},
+				"fields": {
+					"name": "タグ名",
+					"group": "グループ"
+				},
+				"validation": {
+					"nameRequired": "タグ名を入力してください",
+					"groupRequired": "グループを選択してください"
+				}
+			},
+			"loading": {
+				"creating": "タグを作成中、お待ちください...",
+				"deleting": "タグを削除中、お待ちください...",
+				"updating": "タグを更新中、お待ちください...",
+				"bulkSetting": "一括設定中、お待ちください..."
+			}
 		}
 	},
+
 	"domain": {
 		"title": "MailDomain",
 		"addDomain": "ドメインを追加",
@@ -671,6 +845,18 @@
 				"title": "ステップ4: PTR レコードを追加",
 				"description1": "（任意）PTR レコードは逆引きDNSに使用されます",
 				"description2": "IP プロバイダーに連絡して PTR レコードを作成してください"
+			},
+			"dkim": {
+				"formatLabel": "DKIM レコードフォーマット：",
+				"keySize": {
+					"option2048": "2048 ビット RSA キー",
+					"option1024": "1024 ビット RSA キー"
+				},
+				"tips": {
+					"line1": "DKIM は 2048 ビットおよび 1024 ビットの RSA キーに対応します。",
+					"line2": "より高い安全性のため、2048 ビットのキーを推奨します。",
+					"line3": "DNS プロバイダーの制約に応じて選択してください。"
+				}
 			}
 		},
 		"ssl": {
@@ -715,6 +901,24 @@
 				"getCommandFirst": "まずコマンドを取得してください"
 			}
 		},
+		"notSpam": {
+			"checkNow": "今すぐチェック",
+			"logs": "ログ"
+		},
+		"blacklistDetection": {
+			"title": "ブラックリストチェック",
+			"checking": "{results} は {ip} に解決され、既知のブラックリスト {tested} 件に対してチェックしています...",
+			"listed": "リスト件数: {count}",
+			"success": "aaPanel が認識するブラックリストには IP は存在しません",
+			"columns": {
+				"blacklist": "ブラックリスト",
+				"responseIp": "レスポンス IP",
+				"checkTime": "チェック時間"
+			}
+		},
+		"checkLogs": {
+			"title": "チェックログ"
+		},
 		"api": {
 			"loading": {
 				"creating": "ドメインを作成中です、しばらくお待ちください...",
@@ -725,7 +929,8 @@
 				"applyingCert": "証明書を申請中です、しばらくお待ちください...",
 				"settingDefault": "デフォルトドメインを設定中です、しばらくお待ちください...",
 				"settingBrandInfo": "ドメインブランド情報を設定中です、しばらくお待ちください...",
-				"testingConnection": "接続をテスト中です、しばらくお待ちください..."
+				"testingConnection": "接続をテスト中です、しばらくお待ちください...",
+				"detecting": "検出中です、しばらくお待ちください..."
 			}
 		},
 		"edit": {
@@ -814,6 +1019,14 @@
 			"validation": {
 				"groupNameRequired": "グループ名を入力してください"
 			}
+		},
+		"loading": {
+			"creating": "タスクを作成中... お待ちください",
+			"updating": "タスクを編集中... お待ちください",
+			"deleting": "タスクを削除中... お待ちください",
+			"pausing": "タスクを一時停止中... お待ちください",
+			"resuming": "タスクを再開中... お待ちください",
+			"sendingTest": "テストメールを送信中... お待ちください"
 		}
 	},
 	"mailbox": {
@@ -947,104 +1160,319 @@
 		}
 	},
 	"settings": {
-		"title": "設定",
+		"title": "Settings",
 		"service": {
-			"title": "サービス状態",
-			"tips": "ヒント: Ctrl+F で検索、Ctrl+S で保存、Ctrl+H で検索置換",
-			"editTitle": "{name} をオンライン編集",
+			"title": "Service Status",
+			"tips": "Tips: Ctrl+F Search keywords, Ctrl+S Save, Ctrl+H Search and replace",
+			"editTitle": "Online Edit {name}",
 			"columns": {
-				"name": "サービス名",
-				"status": "状態"
+				"name": "Service Name",
+				"status": "Status"
 			},
 			"status": {
-				"running": "稼働中",
-				"stopped": "停止中"
+				"running": "Running",
+				"stopped": "Stopped"
 			},
 			"actions": {
-				"restart": "再起動"
+				"restart": "Restart"
 			},
 			"restart": {
-				"title": "サービス再起動",
-				"confirm": "[{name}] を再起動してもよろしいですか？"
+				"title": "Restart Service",
+				"confirm": "Are you sure you want to restart [{name}]?"
 			}
 		},
 		"bcc": {
-			"title": "BCC 管理",
-			"add": "BCC 追加",
-			"edit": "BCC 編集",
-			"needCopy": "コピー元",
-			"copyTo": "コピー先",
-			"domain": "ドメイン",
-			"type": "BCC タイプ",
-			"status": "状態",
-			"active": "有効",
+			"title": "BCC Management",
+			"add": "Add BCC",
+			"edit": "Edit BCC",
+			"needCopy": "Need Copy",
+			"copyTo": "Copy to",
+			"domain": "Domain",
+			"type": "BCC Type",
+			"status": "Status",
+			"active": "Active",
 			"types": {
-				"sender": "送信時",
-				"recipient": "受信時"
+				"sender": "When sending",
+				"recipient": "When receiving"
 			},
 			"delete": {
-				"title": "BCC [{address}] を削除",
-				"content": "BCC 設定を削除しますか？"
+				"title": "Delete BCC [{address}]",
+				"content": "Whether to delete the BCC setting?"
 			},
 			"placeholders": {
-				"needCopy": "BCC 対象ユーザーを入力",
-				"copyTo": "BCC 受信メールを入力"
+				"needCopy": "Enter the users you need to BCC",
+				"copyTo": "Enter the email you need to receive the BCC"
 			},
 			"loading": {
-				"adding": "BCC を追加中... お待ちください",
-				"saving": "BCC を保存中... お待ちください",
-				"deleting": "BCC を削除中... お待ちください"
+				"adding": "Adding BCC, please wait...",
+				"saving": "Saving BCC, please wait...",
+				"deleting": "Deleting BCC, please wait..."
 			}
 		},
 		"forward": {
-			"add": "転送追加",
-			"edit": "転送編集",
+			"add": "Add Forward",
+			"edit": "Edit Forward",
 			"columns": {
-				"address": "アドレス",
-				"goto": "転送先",
-				"domain": "ドメイン",
-				"created": "作成日",
-				"modified": "更新日",
-				"status": "状態"
+				"address": "Address",
+				"goto": "Goto",
+				"domain": "Domain",
+				"created": "Created",
+				"modified": "Modified",
+				"status": "Status"
 			},
 			"form": {
-				"status": "状態",
-				"forwardedUsers": "転送元ユーザー",
-				"forwardedUsersPlaceholder": "転送元メールを入力",
-				"domain": "ドメイン",
-				"domainPlaceholder": "転送元ユーザーのドメイン名",
-				"receivingUser": "受信ユーザー",
-				"receivingUserPlaceholder": "転送メール受信者。複数ある場合は改行区切り"
+				"status": "Status",
+				"forwardedUsers": "Forwarded users",
+				"forwardedUsersPlaceholder": "Enter the mailbox that needs to be forwarded",
+				"domain": "Domain",
+				"domainPlaceholder": "Domain name of the Forwarded users",
+				"receivingUser": "Receiving user",
+				"receivingUserPlaceholder": "Users who need to accept forwarded mail. If there are multiple, please separate them with newlines"
 			},
 			"delete": {
-				"title": "メール転送削除",
-				"content": "メール転送 [{address}] を削除してもよろしいですか？"
+				"title": "Delete mail forward",
+				"content": "Are you sure you want to delete mail forward [{address}]?"
 			},
 			"loading": {
-				"adding": "メール転送を追加中... お待ちください",
-				"editing": "メール転送を編集中... お待ちください",
-				"deleting": "メール転送を削除中... お待ちください"
+				"adding": "Adding mail forward, please wait...",
+				"editing": "Editing mail forward, please wait...",
+				"deleting": "Deleting mail forward, please wait..."
 			}
 		},
 		"common": {
-			"confirm": "更新",
-			"proxy": {
-				"title": "リバースプロキシ",
-				"description": "リバースプロキシアドレス、外部公開時に使用します。例：購読リスト、配信停止メールなど",
-				"placeholder": "リバースプロキシアドレスを入力してください",
-				"formatTip": "形式：https://example.com",
-				"reset": "リセット",
-				"resetConfirm": {
-					"title": "リバースプロキシをリセット",
-					"content": "リバースプロキシをリセットしてもよろしいですか？"
+			"confirm": "Update",
+			"security": {
+				"title": "Security Settings",
+				"username": "Change Username",
+				"currentUsername": "Current Username",
+				"newUsernamePlaceholder": "Enter new username",
+				"usernameRule": "4-20 characters, letters and numbers",
+				"usernameExists": "Username already exists",
+				"changePassword": "Change Password",
+				"currentPassword": "Current Password",
+				"newPassword": "New Password",
+				"confirmPassword": "Confirm New Password",
+				"passwordStrength": "Password Strength",
+				"passwordMismatch": "Passwords do not match",
+				"strength": {
+					"weak": "Weak",
+					"medium": "Medium",
+					"strong": "Strong"
+				},
+				"securityPath": "Change Security Path",
+				"currentPath": "Current Path",
+				"newPathPlaceholder": "Enter new path, e.g. admin-abc123",
+				"pathRule": "Recommend using complex path for enhanced security",
+				"usernameValidation": {
+					"lengthError": "Username length must be between 4 and 20 characters",
+					"formatError": "Username must consist of letters, numbers or underscores",
+					"duplicateError": "Username cannot be the same as current username"
 				}
+			},
+			"network": {
+				"title": "Network Configuration",
+				"domain": "Domain Settings",
+				"currentDomain": "The access domain name of the console",
+				"newDomainPlaceholder": "Enter new domain, e.g. admin.yourdomain.com",
+				"domainRule": "Please enter a valid domain",
+				"ssl": "SSL Certificate Configuration",
+				"sslEnabled": "SSL Enabled",
+				"certStatus": "Certificate Status",
+				"certValid": "({days} days remaining)",
+				"sslCert": "SSL Certificate (PEM format)",
+				"sslKey": "Private Key (PEM format)",
+				"certPlaceholder": "-----BEGIN CERTIFICATE-----\nMIIFazCCA1OgAwIBAgIURv...\n-----END CERTIFICATE-----",
+				"keyPlaceholder": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG...\n-----END PRIVATE KEY-----",
+				"updateSSL": "Update SSL Certificate",
+				"certValidStatus": "Certificate Valid",
+				"certExpiredStatus": "Certificate Expired",
+				"certExpireTime": "Certificate expires: {time}"
+			},
+			"system": {
+				"title": "System Configuration",
+				"port": "Port Settings",
+				"currentPort": "Current Port",
+				"terminalRequired": "This setting requires terminal operation",
+				"copyCommand": "Copy the above command and execute it in the server terminal",
+				"commandCopied": "Command copied to clipboard",
+				"timezone": "Timezone Settings",
+				"currentTime": "Current System Timezone"
+			},
+			"ipWhitelist": {
+				"title": "IP Whitelist",
+				"enable": "Enable",
+				"disable": "Disable",
+				"add": "Add",
+				"clear": "Clear",
+				"description": "Only allow IPs in the list to access, terminal command to disable: bm.sh cancel-ip-limit",
+				"placeholder": "Please enter IP address",
+				"validation": {
+					"ipRequired": "Please enter IP address"
+				},
+				"confirm": {
+					"deleteTitle": "Delete IP Whitelist",
+					"deleteContent": "Confirm to delete IP whitelist: {ip}",
+					"enableTitle": "Enable IP Whitelist",
+					"disableTitle": "Disable IP Whitelist",
+					"enableContent": "Confirm to enable IP whitelist, only whitelisted IP addresses can access after enabling",
+					"disableContent": "Confirm to disable IP whitelist, all IP addresses can access after disabling",
+					"clearTitle": "Clear IP Whitelist",
+					"clearContent": "Confirm to clear IP whitelist, all IP addresses can access after clearing"
+				}
+			},
+			"proxy": {
+				"title": "Reverse Proxy",
+				"description": "Reverse proxy address, used for external exposure, such as: subscription lists, unsubscribe emails, etc.",
+				"placeholder": "Please enter reverse proxy address",
+				"formatTip": "Format: https://example.com",
+				"reset": "Reset",
+				"resetConfirm": {
+					"title": "Reset Reverse Proxy",
+					"content": "Confirm to reset reverse proxy?"
+				}
+			},
+			"api": {
+				"title": "API設定",
+				"enableApi": "APIを有効にする",
+				"apiDocUrl": "APIドキュメントURL",
+				"swaggerUrl": "Swagger URL",
+				"token": "Token",
+				"confirm": {
+					"enable": "APIを有効にする",
+					"disable": "APIを無効にする",
+					"enableContent": "API設定を有効にしますか？",
+					"disableContent": "API設定を無効にしますか？"
+				}
+			},
+			"notifySettings": {
+				"title": "通知設定",
+				"blacklist": {
+					"title": "IP/ドメインがブラックリストに登録された場合に通知する",
+					"alarmSet": "アラーム設定",
+					"alarmSettings": {
+						"title": "アラーム設定",
+						"name": "名称",
+						"senderEmail": "送信者メールアドレス",
+						"smtpPassword": "SMTPパスワード",
+						"smtpServer": "SMTPサーバー",
+						"port": "ポート",
+						"recipientEmail": "受信者メールアドレス"
+					},
+					"autoCheck": {
+						"title": "ブラックリストの自動検出",
+						"confirm": {
+							"enableTitle": "ブラックリスト自動検出を有効にする",
+							"disableTitle": "ブラックリスト自動検出を無効にする",
+							"enableContent": "ブラックリスト自動検出サービスを開始しますか？",
+							"disableContent": "ブラックリスト自動検出サービスを停止しますか？"
+						}
+					}
+				}
+			},
+			"retention": {
+				"title": "メール保持期間",
+				"currentDays": "{days}日",
+				"trashHint": "ゴミ箱メールの保持期間",
+				"day": "日"
 			}
 		},
 		"api": {
 			"loading": {
-				"restarting": "サービスを再起動中... お待ちください",
-				"saving": "設定を保存中... お待ちください"
+				"restarting": "Restarting service, please wait...",
+				"saving": "Saving configuration, please wait...",
+				"setting": "Setting, please wait...",
+				"settingSSL": "Setting SSL, please wait...",
+				"applyingCert": "Applying certificate, please wait...",
+				"adding": "Adding, please wait...",
+				"deleting": "Deleting, please wait...",
+				"clearing": "Clearing, please wait..."
 			}
+		},
+		"aiModel": {
+			"modelId": "Model ID",
+			"modelAlias": "Model Alias",
+			"modelFeature": "Model Feature",
+			"contentLength": "Maximum Context Length",
+			"supplierTitle": "Supplier Title",
+			"supplierName": "Supplier Name",
+			"cancel": "Cancel",
+			"confirm": "Confirm",
+			"aPIKey": "API Key",
+			"apiPath": "Base Url",
+			"check": "Check",
+			"getKey": "Click to Get Key",
+			"example": "Example",
+			"saveAPI": "Save API",
+			"model": "Model",
+			"byDefault": "By default, all models are retrieved from /models",
+			"addModel": "Add Model"
+		}
+	},
+	"api": {
+		"title": "Send API",
+		"timeRange": "Time Range: ",
+		"status": "Status: ",
+		"search": "Search: ",
+		"searchPlaceholder": "Please enter API name",
+		"refreshData": "Refresh Data",
+		"createNew": "Create API",
+		"statusOptions": {
+			"all": "All",
+			"active": "Active",
+			"inactive": "Inactive"
+		},
+		"columns": {
+			"apiName": "API Name",
+			"apiKey": "API Key",
+			"sendCount": "Send Count",
+			"openRate": "Open Rate",
+			"clickRate": "Click Rate",
+			"bounceRate": "Bounce Rate",
+			"status": "Status"
+		},
+		"statusLabels": {
+			"active": "Active",
+			"inactive": "Inactive"
+		},
+		"confirmDelete": {
+			"title": "Delete API [{apiName}]",
+			"content": "Are you sure you want to delete this API?"
+		},
+		"overview": {
+			"totalSend": "Total Sent",
+			"avgOpenRate": "Avg Open Rate",
+			"avgClickRate": "Avg Click Rate",
+			"avgBounceRate": "Avg Bounce Rate"
+		},
+		"form": {
+			"apiName": "API Name",
+			"status": "Status",
+			"ipWhitelist": "IP Whitelist",
+			"apiNamePlaceholder": "Please enter API name",
+			"ipWhitelistPlaceholder": "Multiple IPs separated by commas, empty means no restriction",
+			"advancedFeatures": "高度な機能",
+			"validation": {
+				"apiNameRequired": "Please enter API name",
+				"addresserRequired": "Please select sender",
+				"templateRequired": "Please select template"
+			},
+			"title": {
+				"edit": "Edit API",
+				"add": "Add API"
+			},
+			"group": {
+				"label": "受信者グループ",
+				"tips": {
+					"choose": "グループを選択：このAPIで追加された新規連絡先は、選択したグループに自動的に追加されます。",
+					"autoCreate": "グループを選択しない：このAPI専用の新しい独立した連絡先グループが自動作成され、すべての新規連絡先が保存されます。"
+				}
+			}
+		},
+		"loading": {
+			"creating": "Creating, please wait...",
+			"updating": "Updating, please wait...",
+			"deleting": "Deleting, please wait...",
+			"testing": "Testing, please wait..."
 		}
 	},
 	"logs": {

@@ -295,6 +295,7 @@
 			},
 			"edit": {
 				"addTitle": "Add Task",
+				"editTitle": "Edit Task",
 				"from": "From",
 				"to": "To",
 				"displayName": "Display Name",
@@ -308,6 +309,8 @@
 				"saveOutbox": "Save to outbox",
 				"ipWarmup": "Associate IP Warmup System",
 				"ipWarmupTip": "Enabling this will limit the sending rate",
+				"trackClick": "Track Clicks",
+				"trackOpen": "Track Opens",
 				"unsubscribeLink": "Unsubscribe link",
 				"threads": "Threads",
 				"threadsAuto": "Auto",
@@ -321,6 +324,8 @@
 				"testEmailPlaceholder": "Please enter test email",
 				"sendTest": "Send test mail",
 				"viewCase": "View case",
+				"tags": "Tags",
+				"tagLogic": "Tag Logic",
 				"preview": {
 					"empty": "Please select an email template to preview"
 				},
@@ -348,6 +353,7 @@
 			},
 			"loading": {
 				"creating": "Creating task, please wait...",
+				"updating": "Updating task, please wait...",
 				"deleting": "Deleting task, please wait...",
 				"pausing": "Pausing task, please wait...",
 				"resuming": "Resuming task, please wait...",
@@ -457,32 +463,59 @@
 	"contacts": {
 		"subscribers": {
 			"joinGroup": "Join Group",
+			"tags": "Tags",
 			"selectGroupHint": "Please select a group on the right",
 			"trends": {
 				"title": "Subscription Trends",
 				"subscriber": "Subscriber"
 			},
 			"search": {
-				"emailPlaceholder": "Enter an email address to search"
+				"emailPlaceholder": "Enter email address to search"
 			},
 			"columns": {
 				"email": "Email",
 				"name": "Group Name",
-				"createdAt": "Creation Time"
+				"createdAt": "Created Time",
+				"lastActiveAt": "Last Active Time"
 			},
 			"status": {
 				"subscribed": "Subscribed",
-				"unsubscribed": "Unsubscribed"
+				"unsubscribed": "Unsubscribed",
+				"unconfirmed": "Unconfirmed"
+			},
+			"labels": {
+				"status": "Status: ",
+				"tags": "Tags: ",
+				"active": "Active: "
+			},
+			"activeSelect": {
+				"options": {
+					"all": "All",
+					"yes": "Yes",
+					"no": "No"
+				},
+				"timeOptions": {
+					"past7Days": "Past 7 days",
+					"pastMonth": "Past month",
+					"past90Days": "Past 90 days",
+					"pastHalfYear": "Past 6 months",
+					"pastYear": "Past year"
+				}
 			},
 			"actions": {
-				"changeGroup": "Change Group"
+				"changeGroup": "Change Group",
+				"setTag": "Set Tag"
 			},
 			"delete": {
 				"title": "Delete Subscriber",
-				"confirm": "Are you sure you want to delete the subscriber {email}?"
+				"confirm": "Are you sure you want to delete subscriber {email}?"
+			},
+			"batchDelete": {
+				"title": "Batch Delete",
+				"confirm": "Are you sure you want to delete the selected subscribers?"
 			},
 			"select": {
-				"prefix": "Group: "
+				"prefix": "Group:"
 			},
 			"edit": {
 				"title": "Change Group",
@@ -506,12 +539,12 @@
 				"pasteData": "Paste Data",
 				"uploadFile": "Upload File",
 				"pastePlaceholder": [
-					"Please paste data, one email, attributes(can be empty) per line",
-					"e.g., example1@example.com",
+					"Please paste data, one email per line, attributes (optional)",
+					"Example: example1@example.com",
 					"example1@example.com,\"{\"\"age\"\": \"\"13\"\", \"\"Gender\"\": \"\"XXX\"\"}\""
 				],
-				"fileTypeHint": "File type: csv, not exceeding 5 MB",
-				"overwriteLabel": "Overwrite Existing Users",
+				"fileTypeHint": "File type: csv, no more than 5 MB",
+				"overwriteLabel": "Overwrite existing users",
 				"overwriteDescription": "Whether to overwrite existing customer information in the list according to imported data during import",
 				"subscriptionStatus": "Subscription Status",
 				"status": "Status",
@@ -534,10 +567,25 @@
 					"fileRequired": "Please upload file"
 				}
 			},
+			"batchSetTag": {
+				"title": "Batch Set Tag",
+				"labels": {
+					"tag": "Tag",
+					"action": "Action"
+				},
+				"actions": {
+					"add": "Add",
+					"remove": "Remove"
+				}
+			},
+			"tagSelect": {
+				"manageTags": "Manage Tags"
+			},
 			"loading": {
 				"importSubscribers": "Importing contacts, please wait...",
 				"updateSubscriberGroup": "Updating group, please wait...",
-				"deleteSubscriber": "Deleting contacts, please wait..."
+				"deleteSubscriber": "Deleting contacts, please wait...",
+				"batchSetTag": "Processing, please wait..."
 			}
 		},
 		"group": {
@@ -575,7 +623,7 @@
 				"confirm": "Are you sure to delete group {name}?"
 			},
 			"fileUpload": {
-				"hint": "File type: csv, not exceeding 5 MB",
+				"hint": "File type: csv, not exceeding 10 MB",
 				"emptyHint": "An empty group will be created when no file is uploaded"
 			},
 			"loading": {
@@ -590,7 +638,8 @@
 			"title": "Settings",
 			"tabs": {
 				"subscribeForm": "Subscribe Form",
-				"subscribeSettings": "Subscribe Settings"
+				"subscribeSettings": "Subscribe Settings",
+				"unsubscribeSettings": "Unsubscribe Settings"
 			},
 			"subscribeForm": {
 				"separateSubscriptionPage": {
@@ -632,6 +681,12 @@
 				"alreadySubscribed": {
 					"redirectLink": "Already Subscribed Redirect Link"
 				}
+			},
+			"unsubscribeSettings": {
+				"subject": "Unsubscribe Subject",
+				"redirectLink": "Unsubscribe Redirect Link",
+				"emailPage": "Unsubscribe Email Page",
+				"enabledDescription": "When enabled, an unsubscribe email will be sent to users when they unsubscribe or API unsubscribe. Manually added users will not trigger this feature."
 			}
 		},
 		"suspend": {
@@ -690,6 +745,56 @@
 					"setting": "Setting, please wait..."
 				}
 			}
+		},
+		"tags": {
+			"title": "Tag Management",
+			"addTag": "Add Tag",
+			"bulkTag": "Bulk Tag",
+			"searchPlaceholder": "Search tags",
+			"columns": {
+				"name": "Tag Name",
+				"groupName": "Group Name",
+				"createTime": "Created Time",
+				"actions": "Actions"
+			},
+			"delete": {
+				"title": "Delete Tag",
+				"confirm": "Are you sure you want to delete this tag 【{name}】?"
+			},
+			"bulk": {
+				"title": "Bulk tag contact",
+				"form": {
+					"group": "Group",
+					"tags": "Tags",
+					"emails": "Emails",
+					"action": "Action",
+					"emailsPlaceholder": "Please paste emails, one per line"
+				},
+				"actions": {
+					"tagThese": "Tag these emails",
+					"tagExcept": "Tag everyone except these emails"
+				}
+			},
+			"form": {
+				"title": {
+					"create": "Create Tag",
+					"edit": "Edit Tag"
+				},
+				"fields": {
+					"name": "Tag Name",
+					"group": "Group"
+				},
+				"validation": {
+					"nameRequired": "Please enter tag name",
+					"groupRequired": "Please select group"
+				}
+			},
+			"loading": {
+				"creating": "Creating tag, please wait...",
+				"deleting": "Deleting tag, please wait...",
+				"updating": "Updating tag, please wait...",
+				"bulkSetting": "Bulk setting, please wait..."
+			}
 		}
 	},
 	"domain": {
@@ -726,6 +831,24 @@
 		"actions": {
 			"dnsRecord": "DNS Records",
 			"setDefault": "Set Default"
+		},
+		"notSpam": {
+			"checkNow": "Check Now",
+			"logs": "Logs"
+		},
+		"checkLogs": {
+			"title": "Check Logs"
+		},
+		"blacklistDetection": {
+			"title": "Black List Check",
+			"checking": "Checking {results} which resolves to {ip} against {tested} known blacklists...",
+			"listed": "Listed: {count}",
+			"success": "Your IP does not exist in the blacklist known by aaPanel",
+			"columns": {
+				"blacklist": "Black List",
+				"responseIp": "Response IP",
+				"checkTime": "Check Time"
+			}
 		},
 		"setDefault": {
 			"title": "Set Default [{domain}]",
@@ -808,6 +931,18 @@
 				"title": "Step 4: Add PTR Record",
 				"description1": "(Optional) PTR record is used for reverse DNS lookup",
 				"description2": "Contact your IP provider to create PTR record"
+			},
+			"dkim": {
+				"formatLabel": "DKIM Record Format:",
+				"keySize": {
+					"option2048": "2048-bit RSA Key",
+					"option1024": "1024-bit RSA Key"
+				},
+				"tips": {
+					"line1": "DKIM supports 2048-bit and 1024-bit RSA keys.",
+					"line2": "Prefer 2048-bit keys for stronger security.",
+					"line3": "Choose based on your DNS provider capability."
+				}
 			}
 		},
 		"ssl": {
@@ -978,7 +1113,8 @@
 				"applyingCert": "Applying certificate, please wait...",
 				"settingDefault": "Setting default domain, please wait...",
 				"settingBrandInfo": "Setting domain brand info, please wait...",
-				"testingConnection": "Testing connection, please wait..."
+				"testingConnection": "Testing connection, please wait...",
+				"detecting": "Detecting, please wait..."
 			}
 		}
 	},
@@ -1284,6 +1420,50 @@
 					"title": "Reset Reverse Proxy",
 					"content": "Confirm to reset reverse proxy?"
 				}
+			},
+			"api": {
+				"title": "API Settings",
+				"enableApi": "Enable API",
+				"apiDocUrl": "API Documentation URL",
+				"swaggerUrl": "Swagger URL",
+				"token": "Token",
+				"confirm": {
+					"enable": "Enable API",
+					"disable": "Disable API",
+					"enableContent": "Do you want to enable API settings?",
+					"disableContent": "Do you want to disable API settings?"
+				}
+			},
+			"notifySettings": {
+				"title": "Notification Settings",
+				"blacklist": {
+					"title": "Notify me when an IP/Domain is blacklisted",
+					"alarmSet": "Alarm Set",
+					"alarmSettings": {
+						"title": "Alarm Settings",
+						"name": "Name",
+						"senderEmail": "Sender Email",
+						"smtpPassword": "SMTP Password",
+						"smtpServer": "SMTP Server",
+						"port": "Port",
+						"recipientEmail": "Recipient Email"
+					},
+					"autoCheck": {
+						"title": "Automatically detect blacklists",
+						"confirm": {
+							"enableTitle": "Enable automatic blacklist detection",
+							"disableTitle": "Disable automatic blacklist detection",
+							"enableContent": "Are you sure to start Automatically detect blacklists service?",
+							"disableContent": "Are you sure to stop Automatically detect blacklists service?"
+						}
+					}
+				}
+			},
+			"retention": {
+				"title": "Mail retention time",
+				"currentDays": "{days} day(s)",
+				"trashHint": "Retention time for Trash emails",
+				"day": "Days"
 			}
 		},
 		"api": {
@@ -1377,6 +1557,7 @@
 			"ipWhitelist": "IP Whitelist",
 			"apiNamePlaceholder": "Please enter API name",
 			"ipWhitelistPlaceholder": "Multiple IPs separated by commas, empty means no restriction",
+			"advancedFeatures": "Advanced Features",
 			"validation": {
 				"apiNameRequired": "Please enter API name",
 				"addresserRequired": "Please select sender",
@@ -1385,6 +1566,13 @@
 			"title": {
 				"edit": "Edit API",
 				"add": "Add API"
+			},
+			"group": {
+				"label": "Recipient Groups",
+				"tips": {
+					"choose": "Selecting a group: All new contacts added via this API will be automatically added to the selected group.",
+					"autoCreate": "No group selected: The system will auto-create a dedicated group for this API to store all new contacts."
+				}
 			}
 		},
 		"loading": {

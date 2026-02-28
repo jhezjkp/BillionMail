@@ -6,13 +6,14 @@ import (
 	"billionmail-core/internal/service/public"
 	"context"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
-	"sort"
-	"strings"
-	"time"
 )
 
 // Overview maillog data overview structure
@@ -595,13 +596,20 @@ func (o *Overview) chartClickRate(campaignID int64, domain string, startTime, en
 
 	query.LeftJoin(`LATERAL(
 	SELECT id
+	FROM mailstat_opened
+	WHERE sm.postfix_message_id = postfix_message_id
+	LIMIT 1
+) as o`, "true")
+
+	query.LeftJoin(`LATERAL(
+	SELECT id
 	FROM mailstat_clicked
 	WHERE sm.postfix_message_id = postfix_message_id
 	LIMIT 1
 ) as c`, "true")
 
 	query.Fields(xAxisField)
-	query.Fields("case when coalesce(sum(case when status='sent' and dsn like '2.%' then 1 else 0 end), 0) > 0 then round(1.0 * count(c.id) / coalesce(sum(case when status='sent' and dsn like '2.%' then 1 else 0 end), 0) * 100, 2) else 0.0 end as click_rate")
+	query.Fields("case when count(o.id) > 0 then round(1.0 * count(c.id) / count(o.id) * 100, 2) else 0.0 end as click_rate")
 
 	query.Group("x")
 
@@ -652,6 +660,36 @@ func (o *Overview) FailedList(campaignID int64, domain string, startTime, endTim
 	query.Fields("coalesce(d.description, sm.description) as description")
 
 	query.Where("sm.status != ?", "sent")
+
+	query.OrderDesc("sm.log_time_millis")
+
+	results, err := query.All()
+	if err != nil {
+		g.Log().Error(context.Background(), err)
+		return nil
+	}
+
+	lst := make([]map[string]interface{}, 0, len(results))
+	for _, item := range results {
+		lst = append(lst, item.Map())
+	}
+
+	return lst
+}
+
+// description FailedListBounced
+func (o *Overview) FailedListBounced(campaignID int64, domain string, startTime, endTime int64) []map[string]interface{} {
+
+	startTime, endTime = o.filterAndPrepareTimeSection(startTime, endTime)
+
+	query := o.buildBaseQuery(campaignID, domain, startTime, endTime)
+
+	query.Fields("sm.recipient")
+	query.Fields("sm.status")
+	query.Fields("sm.description")
+	query.Fields("sm.log_time")
+
+	query.Where("sm.status = ?", "bounced")
 
 	query.OrderDesc("sm.log_time_millis")
 

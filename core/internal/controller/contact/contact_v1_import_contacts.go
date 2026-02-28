@@ -12,11 +12,12 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gvalid"
-	"io"
-	"strings"
 )
 
 const (
@@ -143,7 +144,7 @@ func parseCSVContent(ctx context.Context, content string) ([]*entity.Contact, er
 
 		contact_s := &entity.Contact{
 			Email:   email,
-			Active:  -1,
+			Active:  1,
 			Attribs: make(map[string]string),
 		}
 
@@ -212,9 +213,9 @@ func parseEmailContent(ctx context.Context, content string, importType int) []*e
 			continue
 		}
 
-		contact := &entity.Contact{
+		contactInfo := &entity.Contact{
 			Email:   email,
-			Active:  -1,
+			Active:  1,
 			Attribs: make(map[string]string),
 		}
 
@@ -223,12 +224,12 @@ func parseEmailContent(ctx context.Context, content string, importType int) []*e
 			if attribsStr != "" && attribsStr != "null" {
 				attribs, err := parseJSONAttributes(ctx, attribsStr)
 				if err == nil {
-					contact.Attribs = attribs
+					contactInfo.Attribs = attribs
 				}
 			}
 		}
 
-		contacts = append(contacts, contact)
+		contacts = append(contacts, contactInfo)
 	}
 
 	return contacts
@@ -294,7 +295,8 @@ func (c *ControllerV1) ImportContacts(ctx context.Context, req *v1.ImportContact
 				continue
 			}
 
-			if contactInfo.Active == -1 {
+			// Fix: If "active" is not explicitly specified, then use "DefaultActive" as specified in the request.
+			if c.Active == 1 {
 				contactInfo.Active = req.DefaultActive
 			}
 

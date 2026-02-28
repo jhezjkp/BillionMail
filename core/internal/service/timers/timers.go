@@ -7,6 +7,7 @@ import (
 	"billionmail-core/internal/service/collect"
 	"billionmail-core/internal/service/domains"
 	"billionmail-core/internal/service/fail2ban"
+	"billionmail-core/internal/service/log_maintenance"
 	"billionmail-core/internal/service/mail_boxes"
 	"billionmail-core/internal/service/mail_service"
 	"billionmail-core/internal/service/maillog_stat"
@@ -150,6 +151,46 @@ func Start(ctx context.Context) (err error) {
 	// update iptable
 	gtimer.AddOnce(3*time.Second, func() {
 		multi_ip_domain.ReapplyAllIptablesRules(ctx)
+	})
+
+	// Updated: Used space in the mailbox
+	gtimer.AddOnce(20*time.Second, func() {
+		mail_boxes.UpdateMailboxesUsedSpace()
+	})
+
+	gtimer.Add(60*time.Minute, func() {
+		mail_boxes.UpdateMailboxesUsedSpace()
+	})
+
+	// Check the email quota and the alert for exceeding the quota
+	gtimer.AddOnce(1*time.Minute, func() {
+		mail_boxes.CheckMailboxesQuotaAlerts(ctx)
+	})
+
+	gtimer.Add(60*time.Minute, func() {
+		mail_boxes.CheckMailboxesQuotaAlerts(ctx)
+	})
+
+	// Initialize the quota plugin and update the quota usage status of the domain name and email
+	gtimer.AddOnce(1*time.Second, func() {
+		err := mail_boxes.InitQuotaPluginAndUpdateUsedSpace(ctx)
+		if err != nil {
+			g.Log().Warning(ctx, "Initialize the quota plugin and update the quota usage status of the domain name and email,  failed: ", err)
+			err = nil
+		}
+	})
+
+	gtimer.AddOnce(1*time.Minute, func() {
+		relay.EnsurePostfixConfExists(ctx)
+	})
+
+	// Check the domain name blacklist
+	gtimer.Add(24*time.Hour, func() {
+		domains.CheckDomainsBlacklist(ctx)
+	})
+
+	gtimer.Add(24*time.Hour, func() {
+		log_maintenance.CompressAndCleanupLogs(ctx)
 	})
 
 	g.Log().Debug(ctx, "All timers started successfully")

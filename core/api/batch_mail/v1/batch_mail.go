@@ -3,8 +3,15 @@ package v1
 import (
 	"billionmail-core/internal/model/entity"
 	"billionmail-core/utility/types/api_v1"
+
 	"github.com/gogf/gf/v2/frame/g"
 )
+
+type TagInfo struct {
+	Id         int    `json:"id"          dc:"Tag ID"`
+	Name       string `json:"name"        dc:"Tag Name"`
+	CreateTime int    `json:"create_time" dc:"Create Time"`
+}
 
 type EmailTask struct {
 	Id             int    `json:"id"              dc:"task id"`
@@ -20,24 +27,26 @@ type EmailTask struct {
 	Unsubscribe    int    `json:"unsubscribe"     dc:"unsubscribe"`
 	Threads        int    `json:"threads"         dc:"threads"`
 	//Etypes                  string `json:"etypes"          dc:"etypes"`
-	TrackOpen               int    `json:"track_open"      dc:"track open"`
-	TrackClick              int    `json:"track_click"     dc:"track click"`
-	StartTime               int    `json:"start_time"      dc:"start time"`
-	CreateTime              int    `json:"create_time"     dc:"create time"`
-	UpdateTime              int    `json:"update_time"     dc:"update time"`
-	Remark                  string `json:"remark"          dc:"remark"`
-	Active                  int    `json:"active"          dc:"status"`
-	AddType                 int    `json:"add_type"        dc:"add type"`
-	EstimatedTimeWithWarmup int64  `json:"estimated_time_with_warmup" dc:"estimated time for warmup (if applicable)"`
-	SendsCount              int    `json:"sendsCount"       description:""`
-	DeliveredCount          int    `json:"deliveredCount"   description:""`
-	BouncedCount            int    `json:"bouncedCount"     description:""`
-	DeferredCount           int    `json:"deferredCount"    description:""`
-	StatsUpdateTime         int    `json:"statsUpdateTime"  description:""`
-	GroupId                 int    `json:"group_id"        dc:"Group ID"`
-	TagIds                  []int  `json:"tag_ids"        dc:"Tag IDs"`
-	UseTagFilter            int    `json:"use_tag_filter" dc:"Whether to use tag filter (1: yes, 0: no)"`
-	TagLogic                string `json:"tag_logic" dc:"Tag logic (AND: must have all tags, OR: have any tag)"`
+	TrackOpen               int       `json:"track_open"      dc:"track open"`
+	TrackClick              int       `json:"track_click"     dc:"track click"`
+	StartTime               int       `json:"start_time"      dc:"start time"`
+	CreateTime              int       `json:"create_time"     dc:"create time"`
+	UpdateTime              int       `json:"update_time"     dc:"update time"`
+	Remark                  string    `json:"remark"          dc:"remark"`
+	Active                  int       `json:"active"          dc:"status"`
+	AddType                 int       `json:"add_type"        dc:"add type"`
+	EstimatedTimeWithWarmup int64     `json:"estimated_time_with_warmup" dc:"estimated time for warmup (if applicable)"`
+	SendsCount              int       `json:"sendsCount"       description:""`
+	DeliveredCount          int       `json:"deliveredCount"   description:""`
+	BouncedCount            int       `json:"bouncedCount"     description:""`
+	DeferredCount           int       `json:"deferredCount"    description:""`
+	StatsUpdateTime         int       `json:"statsUpdateTime"  description:""`
+	GroupId                 int       `json:"group_id"        dc:"Group ID"`
+	GroupName               string    `json:"group_name"      dc:"Group Name"`
+	Tags                    []TagInfo `json:"tags"           dc:"Task Tags"`
+	UseTagFilter            int       `json:"use_tag_filter" dc:"Whether to use tag filter (1: yes, 0: no)"`
+	TagLogic                string    `json:"tag_logic" dc:"Tag logic (AND: must have all tags, OR: have any tag, NOT)"`
+	TagIdsRaw               string    `json:"-"              dc:"Tag IDs raw data for internal processing"`
 }
 
 type GroupInfo struct {
@@ -144,9 +153,8 @@ type CreateTaskReq struct {
 	Warmup        int    `json:"warmup" v:"in:0,1" dc:"warmup" default:"0"`
 	Remark        string `json:"remark" dc:"remark"`
 
-	TagIds       []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
-	TagLogic     string `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)" default:"AND"`
-	UseTagFilter int    `json:"use_tag_filter" dc:"whether to use tag filter (1: yes, 0: no)" v:"in:0,1" default:"0"`
+	TagIds   []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
+	TagLogic string `json:"tag_logic" v:"in:AND,OR,NOT" dc:"tag logic (AND: must have all tags, OR: have any tag, NOT)" default:"AND"`
 }
 
 type CreateTaskRes struct {
@@ -272,8 +280,7 @@ type UpdateTaskInfoReq struct {
 	Threads       int    `json:"threads" v:"min:0" dc:"threads"`
 	StartTime     int    `json:"start_time" dc:"start time"`
 	TagIds        []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
-	TagLogic      string `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)"`
-	UseTagFilter  int    `json:"use_tag_filter" dc:"whether to use tag filter (1: yes, 0: no)" v:"in:0,1"`
+	TagLogic      string `json:"tag_logic" v:"in:AND,OR,NOT" dc:"tag logic (AND: must have all tags, OR: have any tag, NOT)"`
 }
 type UpdateTaskInfoRes struct {
 	api_v1.StandardRes

@@ -8,15 +8,16 @@ import (
 	"billionmail-core/internal/service/warmup"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"sync/atomic"
+	"time"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
-	"strconv"
-	"strings"
-	"sync/atomic"
-	"time"
 )
 
 var (
@@ -34,14 +35,13 @@ type CreateTaskArgs struct {
 	TrackOpen   int    `json:"track_open"`  // Track email opens
 	TrackClick  int    `json:"track_click"` // Track email clicks
 	//Etypes      string `json:"etypes"`      // Email types (e.g., group IDs)
-	Remark       string `json:"remark"`         // Task remark
-	StartTime    int    `json:"start_time"`     // Scheduled start time
-	Warmup       int    `json:"warmup"`         // Warmup campaign association
-	AddType      int    `json:"add_type"`       // Add type (0: normal)
-	GroupId      int    `json:"group_id"`       // Groups to unsubscribe from
-	TagIds       []int  `json:"tag_ids"`        // Tag IDs for filtering contacts
-	TagLogic     string `json:"tag_logic"`      // Tag logic (AND/OR)
-	UseTagFilter int    `json:"use_tag_filter"` // Whether to use tag filter
+	Remark    string `json:"remark"`     // Task remark
+	StartTime int    `json:"start_time"` // Scheduled start time
+	Warmup    int    `json:"warmup"`     // Warmup campaign association
+	AddType   int    `json:"add_type"`   // Add type (0: normal)
+	GroupId   int    `json:"group_id"`   // Groups to unsubscribe from
+	TagIds    []int  `json:"tag_ids"`    // Tag IDs for filtering contacts
+	TagLogic  string `json:"tag_logic"`  // Tag logic (AND/OR)
 }
 
 // ============= task related operations =============
@@ -73,9 +73,10 @@ func GetTasksWithPage(ctx context.Context, page, pageSize int, keyword string, s
 		return 0, nil, err
 	}
 
-	// pagination query
+	// pagination query - include tag_ids field and map it to TagIdsRaw
 	list = make([]*v1.EmailTask, 0)
 	err = model.Page(page, pageSize).
+		Fields("*, tag_ids as TagIdsRaw").
 		Order("create_time DESC").
 		Scan(&list)
 
@@ -142,18 +143,17 @@ func CreateTask(ctx context.Context, args CreateTaskArgs) (int, error) {
 		"unsubscribe":     args.Unsubscribe,
 		"threads":         args.Threads,
 		//"etypes":          args.Etypes,
-		"track_open":     args.TrackOpen,
-		"track_click":    args.TrackClick,
-		"start_time":     args.StartTime,
-		"create_time":    now,
-		"update_time":    now,
-		"active":         1,
-		"remark":         args.Remark,
-		"add_type":       args.AddType,
-		"group_id":       args.GroupId,
-		"tag_ids":        tagIdsJson,
-		"tag_logic":      args.TagLogic,
-		"use_tag_filter": args.UseTagFilter,
+		"track_open":  args.TrackOpen,
+		"track_click": args.TrackClick,
+		"start_time":  args.StartTime,
+		"create_time": now,
+		"update_time": now,
+		"active":      1,
+		"remark":      args.Remark,
+		"add_type":    args.AddType,
+		"group_id":    args.GroupId,
+		"tag_ids":     tagIdsJson,
+		"tag_logic":   args.TagLogic,
 	})
 	if err != nil {
 		g.Log().Debug(ctx, "Failed to create campaign:", err.Error())
@@ -259,6 +259,43 @@ func ImportRecipients(ctx context.Context, taskId int, contacts []*entity.Contac
 	return nil
 }
 
+// ImportRecipientsTx
+func ImportRecipientsTx(ctx context.Context, tx gdb.TX, taskId int, contacts []*entity.Contact) error {
+	if len(contacts) == 0 {
+		return nil
+	}
+	const batchSize = 1000
+	totalBatches := (len(contacts) + batchSize - 1) / batchSize
+	now := time.Now().Unix()
+	for i := 0; i < totalBatches; i++ {
+		startIdx := i * batchSize
+		endIdx := (i + 1) * batchSize
+		if endIdx > len(contacts) {
+			endIdx = len(contacts)
+		}
+		currentBatch := contacts[startIdx:endIdx]
+		values := make([]g.Map, len(currentBatch))
+		for j, contact := range currentBatch {
+			values[j] = g.Map{
+				"task_id":     taskId,
+				"recipient":   contact.Email,
+				"is_sent":     0,
+				"sent_time":   0,
+				"message_id":  "",
+				"create_time": now,
+			}
+		}
+		result, err := tx.Ctx(ctx).Model("recipient_info").InsertIgnore(values)
+		if err != nil {
+			return fmt.Errorf("failed to import recipients (batch %d/%d): %w", i+1, totalBatches, err)
+		}
+		if _, err = result.RowsAffected(); err != nil {
+			g.Log().Debugf(ctx, "ImportRecipientsTx: could not get affected rows for batch %d/%d: %v", i+1, totalBatches, err)
+		}
+	}
+	return nil
+}
+
 // ============= contact group related operations =============
 
 // GetGroupInfo get group info
@@ -300,10 +337,9 @@ func GetActiveContacts(ctx context.Context, groupId int) ([]*entity.Contact, err
 }
 
 type ContactFilter struct {
-	GroupId      int
-	TagIds       []int
-	TagLogic     string // "AND" or "OR"
-	UseTagFilter int
+	GroupId  int
+	TagIds   []int
+	TagLogic string // "AND" or "OR"
 }
 
 func GetFilteredContacts(ctx context.Context, filter ContactFilter) ([]*entity.Contact, error) {
@@ -318,7 +354,7 @@ func GetFilteredContacts(ctx context.Context, filter ContactFilter) ([]*entity.C
 		model = model.Where("c.group_id", filter.GroupId)
 	}
 
-	if filter.UseTagFilter == 1 && len(filter.TagIds) > 0 {
+	if len(filter.TagIds) > 0 {
 		if filter.TagLogic == "AND" {
 			// AND
 			for i, tagId := range filter.TagIds {
@@ -328,7 +364,7 @@ func GetFilteredContacts(ctx context.Context, filter ContactFilter) ([]*entity.C
 					"c.id = "+alias+".contact_id AND "+alias+".tag_id = "+g.NewVar(tagId).String(),
 				)
 			}
-		} else {
+		} else if filter.TagLogic == "OR" {
 			// OR
 			var inValues []string
 			for _, tagId := range filter.TagIds {
@@ -345,6 +381,12 @@ func GetFilteredContacts(ctx context.Context, filter ContactFilter) ([]*entity.C
 				subQuery,
 				"c.id = ct.contact_id",
 			)
+		} else if filter.TagLogic == "NOT" {
+			// NOT: contact must not have any of the selected tags
+			subQuery := g.DB().Model("bm_contact_tags").
+				Fields("DISTINCT contact_id").
+				WhereIn("tag_id", filter.TagIds)
+			model = model.WhereNotIn("c.id", subQuery)
 		}
 	}
 
@@ -358,193 +400,69 @@ func GetFilteredContacts(ctx context.Context, filter ContactFilter) ([]*entity.C
 }
 
 // ============= business logic combination =============
-// add type parameter add_type default 0
-//
-//	func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addType int) (int, error) {
-//		var taskId int
-//		var err error
-//		err = g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-//			etype := strings.Join(gconv.SliceStr(req.GroupIds), ",")
-//
-//			taskId, err = CreateTask(ctx, CreateTaskArgs{
-//				Addresser:   req.Addresser,
-//				Subject:     req.Subject,
-//				FullName:    req.FullName,
-//				TemplateId:  req.TemplateId,
-//				IsRecord:    req.IsRecord,
-//				Unsubscribe: req.Unsubscribe,
-//				Threads:     req.Threads,
-//				TrackOpen:   req.TrackOpen,
-//				TrackClick:  req.TrackClick,
-//				Etypes:      etype,
-//				Remark:      req.Remark,
-//				StartTime:   req.StartTime,
-//				Warmup:      req.Warmup,
-//				AddType:     addType,
-//			})
-//			if err != nil {
-//				return gerror.New(public.LangCtx(ctx, "Failed to create task {}", err.Error()))
-//			}
-//
-//			var abnormalRecipients []struct {
-//				Recipient string `json:"recipient"`
-//				Count     int    `json:"count"`
-//			}
-//
-//			err = tx.Model("abnormal_recipient").
-//				Where("count >= ?", 3).
-//				Fields("recipient, count").
-//				Scan(&abnormalRecipients)
-//
-//			if err != nil {
-//				g.Log().Debugf(ctx, "Failed to get the exception recipient list: %v", err)
-//			}
-//
-//			abnormalMap := make(map[string]int)
-//			if len(abnormalRecipients) > 0 {
-//				for _, ar := range abnormalRecipients {
-//					abnormalMap[ar.Recipient] = ar.Count
-//				}
-//			}
-//
-//			// import recipient information
-//			totalRecipients := 0
-//			totalSkipped := 0
-//
-//			for _, groupId := range req.GroupIds {
-//				contacts, err := GetActiveContacts(ctx, groupId)
-//				if err != nil {
-//					return gerror.New(public.LangCtx(ctx, "Failed to get contacts for group {}: {}", groupId, err.Error()))
-//				}
-//				if len(contacts) == 0 {
-//					continue
-//				}
-//
-//				// abnormal skip and email format validation
-//				filteredContacts := make([]*entity.Contact, 0, len(contacts))
-//				skippedInGroup := 0
-//
-//				for _, contact := range contacts {
-//					// Check if email is in abnormal list
-//					if _, exists := abnormalMap[contact.Email]; exists {
-//						skippedInGroup++
-//						continue
-//					}
-//
-//					// Validate email format
-//					if err := gvalid.New().Rules("email").Data(contact.Email).Run(ctx); err != nil {
-//						skippedInGroup++
-//						g.Log().Debug(ctx, "Skip erroneous email addresses:", contact.Email, " Error:", err)
-//						continue
-//					}
-//
-//					filteredContacts = append(filteredContacts, contact)
-//				}
-//
-//				if skippedInGroup > 0 {
-//					totalSkipped += skippedInGroup
-//				}
-//
-//				if len(filteredContacts) == 0 {
-//					continue
-//				}
-//
-//				err = ImportRecipients(ctx, taskId, filteredContacts)
-//				if err != nil {
-//					return gerror.New(public.LangCtx(ctx, "Failed to import recipients for group {}: {}", groupId, err.Error()))
-//				}
-//
-//				totalRecipients += len(filteredContacts)
-//			}
-//
-//			// update recipient count
-//			actualCount, err := GetActualRecipientCount(ctx, taskId)
-//			if err == nil && actualCount > 0 {
-//				err = UpdateRecipientCount(ctx, taskId, actualCount)
-//				if err != nil {
-//					return gerror.New(public.LangCtx(ctx, "Failed to update recipient count for task {}: {}", taskId, err.Error()))
-//				}
-//			}
-//
-//			if totalRecipients == 0 {
-//				return gerror.New(public.LangCtx(ctx, "No recipients found, task creation is not allowed"))
-//			}
-//			return nil
-//		})
-//
-//		if err != nil {
-//			return 0, err
-//		}
-//
-//		return taskId, nil
-//	}
 
 func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addType int) (int, error) {
 	var taskId int
 	var err error
 	err = g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 
-		taskId, err = CreateTask(ctx, CreateTaskArgs{
-			Addresser:   req.Addresser,
-			Subject:     req.Subject,
-			FullName:    req.FullName,
-			TemplateId:  req.TemplateId,
-			IsRecord:    req.IsRecord,
-			Unsubscribe: req.Unsubscribe,
-			Threads:     req.Threads,
-			TrackOpen:   req.TrackOpen,
-			TrackClick:  req.TrackClick,
-			//Etypes:      etype,
-			Remark:       req.Remark,
-			StartTime:    req.StartTime,
-			Warmup:       req.Warmup,
-			AddType:      addType,
-			GroupId:      req.GroupId,
-			TagIds:       req.TagIds,
-			TagLogic:     req.TagLogic,
-			UseTagFilter: req.UseTagFilter,
-		})
-		if err != nil {
-			return gerror.New(public.LangCtx(ctx, "Failed to create task {}", err.Error()))
+		now := time.Now().Unix()
+		taskName := fmt.Sprintf("task_%d", now)
+		var tagIdsJson string
+		if len(req.TagIds) > 0 {
+			tagIdsJson = gconv.String(req.TagIds)
 		}
+
+		res, e := tx.Ctx(ctx).Model("email_tasks").Insert(g.Map{
+			"task_name":       taskName,
+			"addresser":       req.Addresser,
+			"subject":         req.Subject,
+			"full_name":       req.FullName,
+			"recipient_count": 0,
+			"task_process":    0,
+			"pause":           0,
+			"template_id":     req.TemplateId,
+			"is_record":       req.IsRecord,
+			"unsubscribe":     req.Unsubscribe,
+			"threads":         req.Threads,
+			"track_open":      req.TrackOpen,
+			"track_click":     req.TrackClick,
+			"start_time":      req.StartTime,
+			"create_time":     now,
+			"update_time":     now,
+			"active":          1,
+			"remark":          req.Remark,
+			"add_type":        addType,
+			"group_id":        req.GroupId,
+			"tag_ids":         tagIdsJson,
+			"tag_logic":       req.TagLogic,
+		})
+		if e != nil {
+			return gerror.New(public.LangCtx(ctx, "Failed to create task {}", e.Error()))
+		}
+		id64, _ := res.LastInsertId()
+		taskId = int(id64)
 
 		var abnormalRecipients []struct {
 			Recipient string `json:"recipient"`
 			Count     int    `json:"count"`
 		}
-
-		err = tx.Model("abnormal_recipient").
-			Where("count >= ?", 3).
-			Fields("recipient, count").
-			Scan(&abnormalRecipients)
-
-		if err != nil {
-			g.Log().Debugf(ctx, "Failed to get the exception recipient list: %v", err)
+		if e = tx.Model("abnormal_recipient").Where("count >= ?", 3).Fields("recipient, count").Scan(&abnormalRecipients); e != nil {
+			g.Log().Debugf(ctx, "Failed to get the exception recipient list: %v", e)
+		}
+		abnormalMap := make(map[string]int, len(abnormalRecipients))
+		for _, ar := range abnormalRecipients {
+			abnormalMap[ar.Recipient] = ar.Count
 		}
 
-		abnormalMap := make(map[string]int)
-		if len(abnormalRecipients) > 0 {
-			for _, ar := range abnormalRecipients {
-				abnormalMap[ar.Recipient] = ar.Count
-			}
-		}
-
-		filter := ContactFilter{
-			GroupId:      req.GroupId,
-			TagIds:       req.TagIds,
-			TagLogic:     req.TagLogic,
-			UseTagFilter: req.UseTagFilter,
-		}
-
+		filter := ContactFilter{GroupId: req.GroupId, TagIds: req.TagIds, TagLogic: req.TagLogic}
 		var contacts []*entity.Contact
-		if req.UseTagFilter == 1 {
-
+		if len(req.TagIds) > 0 {
 			contacts, err = GetFilteredContacts(ctx, filter)
 			if err != nil {
 				return gerror.New(public.LangCtx(ctx, "Failed to get filtered contacts: {}", err.Error()))
 			}
 		} else {
-			// Compatible with older versions: Use group filtering
 			if req.GroupId <= 0 {
 				return gerror.New(public.LangCtx(ctx, "Group ID is required when not using tag filter"))
 			}
@@ -553,57 +471,47 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 				return gerror.New(public.LangCtx(ctx, "Failed to get contacts for group {}: {}", req.GroupId, err.Error()))
 			}
 		}
-
 		if len(contacts) == 0 {
-			if req.UseTagFilter == 1 {
+			if len(req.TagIds) > 0 {
 				return gerror.New(public.LangCtx(ctx, "No contacts found matching the tag filter criteria"))
-			} else {
-				return gerror.New(public.LangCtx(ctx, "No contacts found in group {}", req.GroupId))
 			}
+			return gerror.New(public.LangCtx(ctx, "No contacts found in group {}", req.GroupId))
 		}
 
-		// abnormal skip and email format validation
 		filteredContacts := make([]*entity.Contact, 0, len(contacts))
-		skippedInGroup := 0
-
 		for _, contact := range contacts {
-			// Check if email is in abnormal list
 			if _, exists := abnormalMap[contact.Email]; exists {
-				skippedInGroup++
 				continue
 			}
-
-			// Validate email format
-			if err := gvalid.New().Rules("email").Data(contact.Email).Run(ctx); err != nil {
-				skippedInGroup++
-				g.Log().Debug(ctx, "Skip erroneous email addresses:", contact.Email, " Error:", err)
+			if e := gvalid.New().Rules("email").Data(contact.Email).Run(ctx); e != nil {
+				g.Log().Debug(ctx, "Skip erroneous email addresses:", contact.Email, " Error:", e)
 				continue
 			}
-
 			filteredContacts = append(filteredContacts, contact)
 		}
-
 		if len(filteredContacts) == 0 {
 			return gerror.New(public.LangCtx(ctx, "No valid contacts found after filtering"))
 		}
 
-		err = ImportRecipients(ctx, taskId, filteredContacts)
-		if err != nil {
+		if err = ImportRecipientsTx(ctx, tx, taskId, filteredContacts); err != nil {
 			return gerror.New(public.LangCtx(ctx, "Failed to import recipients: {}", err.Error()))
 		}
 
-		// update recipient count
-		actualCount, err := GetActualRecipientCount(ctx, taskId)
-		if err == nil && actualCount > 0 {
-			err = UpdateRecipientCount(ctx, taskId, actualCount)
-			if err != nil {
-				return gerror.New(public.LangCtx(ctx, "Failed to update recipient count for task {}: {}", taskId, err.Error()))
+		if actualCount, e2 := GetActualRecipientCount(ctx, taskId); e2 == nil && actualCount > 0 {
+			if _, e2 = tx.Ctx(ctx).Model("email_tasks").Where("id", taskId).Data(g.Map{"recipient_count": actualCount}).Update(); e2 != nil {
+				return gerror.New(public.LangCtx(ctx, "Failed to update recipient count for task {}: {}", taskId, e2.Error()))
 			}
 		}
 
+		if req.Warmup == 1 {
+			if serverIP, _ := public.GetServerIP(); serverIP != "" {
+				if _, e2 := warmup.WarmupCampaign().AssociateCampaignWithWarmup(ctx, int64(taskId), serverIP); e2 != nil {
+					g.Log().Warning(ctx, "Failed to associate campaign with warmup for task ID %d: %v", taskId, e2)
+				}
+			}
+		}
 		return nil
 	})
-
 	if err != nil {
 		return 0, err
 	}
@@ -730,6 +638,7 @@ func UpdateTaskJoinMailstat(ctx context.Context) {
 	var tasksToUpdate []*entity.EmailTask
 	err := g.DB().Model("email_tasks").
 		Where("task_process IN (?)", []int{1, 3}).
+		WhereOr("task_process = 2 AND stats_update_time > ?", time.Now().Unix()-36*3600).
 		WhereOr("task_process = 2 AND sends_count < recipient_count*0.99").
 		WhereOr("stats_update_time", 0).
 		Order("id DESC").
@@ -798,4 +707,67 @@ func getSingleTaskStats(ctx context.Context, taskId int64) map[string]interface{
 	}
 
 	return stats
+}
+
+// GetTagsByIds get tags by IDs
+func GetTagsByIds(ctx context.Context, tagIds []int) ([]v1.TagInfo, error) {
+	if len(tagIds) == 0 {
+		return []v1.TagInfo{}, nil
+	}
+
+	var tags []v1.TagInfo
+	err := g.DB().Model("bm_tags").
+		WhereIn("id", tagIds).
+		Fields("id, name, create_time").
+		Scan(&tags)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
+// GetTaskTagIds get tag IDs from task tag_ids field (JSON array)
+func GetTaskTagIds(tagIdsStr string) []int {
+	if tagIdsStr == "" {
+		return []int{}
+	}
+
+	var tagIds []int
+	if err := gconv.Scan(tagIdsStr, &tagIds); err != nil {
+		g.Log().Warningf(context.Background(), "Failed to parse tag_ids: %s, error: %v", tagIdsStr, err)
+		return []int{}
+	}
+
+	return tagIds
+}
+
+// GetGroupsByIds get groups by IDs
+func GetGroupsByIds(ctx context.Context, groupIds []int) (map[int]string, error) {
+	if len(groupIds) == 0 {
+		return make(map[int]string), nil
+	}
+
+	var groups []struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	}
+
+	err := g.DB().Model("bm_contact_groups").
+		WhereIn("id", groupIds).
+		Fields("id, name").
+		Scan(&groups)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to map for quick lookup
+	groupMap := make(map[int]string)
+	for _, group := range groups {
+		groupMap[group.Id] = group.Name
+	}
+
+	return groupMap, nil
 }

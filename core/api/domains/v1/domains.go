@@ -2,6 +2,7 @@ package v1
 
 import (
 	"billionmail-core/utility/types/api_v1"
+
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -14,12 +15,13 @@ type DNSRecord struct {
 }
 
 type DNSRecords struct {
-	SPF   DNSRecord `json:"spf"          dc:"SPF record"`
-	DKIM  DNSRecord `json:"dkim"         dc:"DKIM record"`
-	DMARC DNSRecord `json:"dmarc"         dc:"DMARC record"`
-	MX    DNSRecord `json:"mx"   dc:"MX record"`
-	A     DNSRecord `json:"a"    dc:"A record"`
-	PTR   DNSRecord `json:"ptr"        dc:"PTR record"`
+	SPF       DNSRecord `json:"spf"          dc:"SPF record"`
+	DKIM      DNSRecord `json:"dkim"         dc:"DKIM record"`
+	DKIMShort DNSRecord `json:"dkim_short"   dc:"DKIM short record"`
+	DMARC     DNSRecord `json:"dmarc"        dc:"DMARC record"`
+	MX        DNSRecord `json:"mx"           dc:"MX record"`
+	A         DNSRecord `json:"a"            dc:"A record"`
+	PTR       DNSRecord `json:"ptr"          dc:"PTR record"`
 }
 
 type CertInfo struct {
@@ -35,22 +37,43 @@ type CertInfo struct {
 
 // Domain defines the domain entity
 type Domain struct {
-	Domain       string     `json:"domain"        dc:"Domain name"`
-	ARecord      string     `json:"a_record"      dc:"A record"`
-	Mailboxes    int        `json:"mailboxes"     dc:"Number of mailboxes created"`
-	MailboxQuota int64      `json:"mailbox_quota" dc:"Default mailbox space size"`
-	Quota        int64      `json:"quota"         dc:"Domain quota"`
-	RateLimit    int        `json:"rate_limit"    dc:"Rate limit for sending emails per second"`
-	CreateTime   int64      `json:"create_time"   dc:"Creation time"`
-	Active       int        `json:"active"        dc:"Status: 1-enabled, 0-disabled"`
-	DNSRecords   DNSRecords `json:"dns_records" dc:"DNS records"`
-	CertInfo     CertInfo   `json:"cert_info" dc:"Certificate information"`
-	Catchall     string     `json:"email"      dc:"Cache all DNS records, used for domain verification"`
-	Default      int        `json:"default"      dc:"Default sender domain, 1-yes, 0-no"`
-	Urls         []string   `json:"urls" dc:"Additional URLs associated with the domain"`
-	HasBrandInfo int        `json:"hasbrandinfo"        dc:"Brand information : 1-exist, 0-not exist"`
-	// 补充专属ip
+	Domain         string         `json:"domain"        dc:"Domain name"`
+	ARecord        string         `json:"a_record"      dc:"A record"`
+	Mailboxes      int            `json:"mailboxes"     dc:"Number of mailboxes created"`
+	MailboxQuota   int64          `json:"mailbox_quota" dc:"Default mailbox space size"`
+	Quota          int64          `json:"quota"         dc:"Domain quota"`
+	RateLimit      int            `json:"rate_limit"    dc:"Rate limit for sending emails per second"`
+	CreateTime     int64          `json:"create_time"   dc:"Creation time"`
+	Active         int            `json:"active"        dc:"Status: 1-enabled, 0-disabled"`
+	DNSRecords     DNSRecords     `json:"dns_records" dc:"DNS records"`
+	CertInfo       CertInfo       `json:"cert_info" dc:"Certificate information"`
+	Catchall       string         `json:"email"      dc:"Cache all DNS records, used for domain verification"`
+	Default        int            `json:"default"      dc:"Default sender domain, 1-yes, 0-no"`
+	Urls           []string       `json:"urls" dc:"Additional URLs associated with the domain"`
+	HasBrandInfo   int            `json:"hasbrandinfo"        dc:"Brand information : 1-exist, 0-not exist"`
 	MultiIPDomains *MultiIPDomain `json:"multi_ip_domains" dc:"Multiple IP domains"`
+	CurrentUsage   int64          `json:"current_usage" dc:"Domain Current usage"`
+
+	BlackCheckResult *BlacklistCheckResult `json:"black_check_result" dc:"Last blacklist check result"`
+	BlackCheckLog    string                `json:"black_check_log" dc:"Path to blacklist check log file"`
+}
+
+type BlacklistCheckResult struct {
+	Time        int64             `json:"time"`
+	Results     string            `json:"results"`
+	IP          string            `json:"ip"`
+	Tested      int               `json:"tested"`
+	Passed      int               `json:"passed"`
+	Invalid     int               `json:"invalid"`
+	Blacklisted int               `json:"blacklisted"`
+	BlackList   []BlacklistDetail `json:"black_list"`
+}
+
+// BlacklistDetail
+type BlacklistDetail struct {
+	Blacklist string `json:"blacklist"`
+	Response  string `json:"response"`
+	Time      int64  `json:"time"`
 }
 
 type AddDomainReq struct {
@@ -65,7 +88,7 @@ type AddDomainReq struct {
 	Catchall      string   `json:"email" v:"email" dc:"Catch all email address, used for domain verification"`
 	Urls          []string `json:"urls" dc:"Additional URLs associated with the domain"`
 	HasBrandInfo  int      `json:"hasbrandinfo"        dc:"Brand information : 1-exist, 0-not exist"`
-	OutboundIp   string   `json:"outbound_ip" v:"ipv4" dc:"Exclusive IP address for the domain, used for sending emails"`
+	OutboundIp    string   `json:"outbound_ip" v:"ipv4" dc:"Exclusive IP address for the domain, used for sending emails"`
 }
 
 type AddDomainRes struct {
@@ -85,7 +108,7 @@ type UpdateDomainReq struct {
 	Catchall      string   `json:"email" v:"email" dc:"Catch all email address, used for domain verification"`
 	Urls          []string `json:"urls" dc:"Additional URLs associated with the domain"`
 	HasBrandInfo  int      `json:"hasbrandinfo"        dc:"Brand information : 1-exist, 0-not exist"`
-	OutboundIp   string   `json:"outbound_ip" v:"ipv4" dc:"Exclusive IP address for the domain, used for sending emails"`
+	OutboundIp    string   `json:"outbound_ip" v:"ipv4" dc:"Exclusive IP address for the domain, used for sending emails"`
 }
 
 type UpdateDomainRes struct {

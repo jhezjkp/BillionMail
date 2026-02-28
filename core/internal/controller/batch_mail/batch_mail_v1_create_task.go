@@ -5,6 +5,7 @@ import (
 	"billionmail-core/internal/service/batch_mail"
 	"billionmail-core/internal/service/public"
 	"context"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 
 	"billionmail-core/api/batch_mail/v1"
@@ -56,16 +57,14 @@ func validateCreateTaskRequest(req *v1.CreateTaskReq) error {
 		return gerror.New("Must select a contact group")
 	}
 
-	if req.UseTagFilter==1 && len(req.TagIds) == 0 {
-		return gerror.New("Must select at least one tag when tag filter is enabled")
-	}
+	if len(req.TagIds) > 0 {
+		if req.TagLogic != "" && req.TagLogic != "AND" && req.TagLogic != "OR"  && req.TagLogic != "NOT" {
+			return gerror.New("Tag logic must be AND or OR or NOT")
+		}
 
-	if req.UseTagFilter==1 && req.TagLogic != "" && req.TagLogic != "AND" && req.TagLogic != "OR" {
-		return gerror.New("Tag logic must be AND or OR")
-	}
-
-	if req.UseTagFilter==1 && req.TagLogic == "" {
-		req.TagLogic = "AND"
+		if req.TagLogic == "" {
+			req.TagLogic = "AND"
+		}
 	}
 
 	return nil

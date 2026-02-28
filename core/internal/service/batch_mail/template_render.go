@@ -82,7 +82,6 @@ func (e *TemplateEngine) RenderEmailTemplateWithAPI(ctx context.Context, content
 	// prepare api data
 	apiData := make(map[string]interface{})
 	if contact != nil {
-		// Custom properties are added directly to subscriberData
 		if apiAttribs != nil {
 			for k, v := range apiAttribs {
 				apiData[k] = v
@@ -140,7 +139,8 @@ func (e *TemplateEngine) RenderEmailTemplateWithAPI(ctx context.Context, content
 		"Subscriber":     subscriberData,
 		"Task":           taskData,
 		"UnsubscribeURL": unsubscribeURL,
-		"API":            apiAttribs,
+		// use the prepared apiData so API variables are available to templates
+		"API": apiData,
 	}
 
 	// use template engine to render with error recovery
@@ -149,9 +149,42 @@ func (e *TemplateEngine) RenderEmailTemplateWithAPI(ctx context.Context, content
 		return "", err
 	}
 
-	// Analyzing Spintax Grammar
+	// Handle spintax rendering
 	spintaxParser := GetSpintaxParser()
-	result = spintaxParser.ParseSpintax(result)
+
+	if task != nil {
+
+		executor := GetTaskExecutor(task.Id)
+		if executor != nil && executor.spintaxTemplate != nil {
+
+			hasSpintax := spintaxParser.HasSpintax(result)
+
+			if hasSpintax {
+
+				result = spintaxParser.ParseSpintax(result)
+			} else {
+
+				originalContentHash := spintaxParser.calculateHash(content)
+				if executor.spintaxTemplate.Hash == originalContentHash {
+
+					shouldUsePreTemplate := len(executor.spintaxTemplate.Parts) > 1 ||
+						(len(executor.spintaxTemplate.Parts) == 1 && executor.spintaxTemplate.Parts[0].Type == SpintaxPart)
+
+					if shouldUsePreTemplate {
+
+						result = spintaxParser.RenderTemplate(executor.spintaxTemplate)
+					}
+				} else {
+
+					result = spintaxParser.ParseSpintax(result)
+				}
+			}
+		} else {
+			result = spintaxParser.ParseSpintax(result)
+		}
+	} else {
+		result = spintaxParser.ParseSpintax(result)
+	}
 
 	return result, nil
 }
@@ -180,11 +213,12 @@ func (e *TemplateEngine) cleanUndefinedVariables(content string) string {
 	// Allowed retained function names
 	knownFunctions := []string{"UnsubscribeURL"}
 	knownVariablePatterns := []string{
-		`\{\{\s*\.\s*Subscriber\s*\.\s*[^\s{}]+[^}]*\}\}`,
-		`\{\{\s*\.\s*Task\s*\.\s*[^\s{}]+[^}]*\}\}`,
+		`\{\{\s*\.\s*Subscriber\s*\.\s*[^\s{}]+[^}]*}}`,
+		`\{\{\s*\.\s*Task\s*\.\s*[^\s{}]+[^}]*}}`,
+		`\{\{\s*\.\s*API\s*\.\s*[^\s{}]+[^}]*}}`,
 	}
 
-	allVarRegex := regexp.MustCompile(`\{\{.*?\}\}`)
+	allVarRegex := regexp.MustCompile(`\{\{[\s\S]*?}}`)
 
 	content = allVarRegex.ReplaceAllStringFunc(content, func(match string) string {
 		inner := strings.TrimSpace(match[2 : len(match)-2])

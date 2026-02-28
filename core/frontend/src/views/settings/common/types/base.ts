@@ -28,6 +28,7 @@ export interface SystemInfo {
 	ipv4_network: string
 	fail2ban: boolean
 	server_ip: string
+	retention_days: number
 	ip_whitelist_enable: boolean
 	ip_whitelist: Array<{
 		id: number
@@ -63,5 +64,23 @@ export interface SystemInfo {
 	reverse_proxy_domain: {
 		current_url: string
 		reverse_proxy: string
+	}
+	api_doc_swagger: {
+		api_doc_enabled: boolean
+		api_doc_url: string
+		api_token: string
+		swagger_url: string
+	}
+	blacklist_config: {
+		auto_scan_enabled: boolean
+		alert_enabled: boolean
+		alert_settings: {
+			name: string
+			sender_email: string
+			smtp_password: string
+			smtp_server: string
+			smtp_port: number
+			recipient_list: string[]
+		}
 	}
 }

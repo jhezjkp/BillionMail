@@ -62,6 +62,7 @@ services:
         - ./conf/dovecot/conf.d:/etc/dovecot/conf.d
         - ./conf/dovecot/dovecot.conf:/etc/dovecot/dovecot.conf
         - ./conf/dovecot/rsyslog.conf:/etc/rsyslog.conf
+        - ./logs/dovecot:/var/log/mail
         - ssl-certs:/etc/ssl/mail
         - ssl-self-signed:/etc/ssl/ssl-self-signed
         - vmail-data:/var/vmail
@@ -101,6 +102,7 @@ services:
         - ./conf/postfix/conf:/etc/postfix/conf
         - ./conf/postfix/sql:/etc/postfix/sql
         - ./conf/postfix/rsyslog.conf:/etc/rsyslog.conf
+        - ./logs/postfix:/var/log/mail
         - ssl-certs:/etc/ssl/mail
         - postfix-data:/var/spool/postfix
         - rspamd-data:/var/lib/rspamd
@@ -169,8 +171,10 @@ services:
         - webmail-data:/opt/billionmail/webmail-data
         - ./conf:/opt/billionmail/conf
         - ./logs:/opt/billionmail/logs
+        - ./logs/core:/opt/billionmail/core/logs
         - core-data:/opt/billionmail/core/data
         - /var/run/docker.sock:/var/run/docker.sock:ro
+        - ./vmail-data:/opt/billionmail/vmail-data
       environment:
         - TZ=${TZ:-Etc/UTC}
         - FAIL2BAN_INIT=${FAIL2BAN_INIT:-y}
